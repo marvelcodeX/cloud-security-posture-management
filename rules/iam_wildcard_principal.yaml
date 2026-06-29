@@ -1,0 +1,14 @@
+rule_id: CIS-AWS-005
+name: IAM Policy Wildcard Principal
+severity: Critical
+
+compliance:
+  cis_aws: "1.16"
+  nist_csf: "PR.AC-4"
+
+condition:
+  resource_type: iam_policy
+  eval_path: principal
+  contains: "*"
+
+remediation: Remove wildcard principals; grant access only to specific, trusted principals.

@@ -1,0 +1,27 @@
+# Declarative rule schema reference (documentation only).
+# NOTE: the rule engine's loader explicitly skips this file (spec.yaml);
+# it is never evaluated as a rule.
+#
+# Every rule file in /rules/ must follow this structure. Exactly ONE
+# operator key (equals | contains | regex | gte | lte) is used per rule.
+
+rule_id: "Unique rule identifier, e.g. CIS-AWS-001"
+name: "Human-readable rule name"
+severity: "Low | Medium | High | Critical"
+
+compliance:
+  cis_aws: "CIS AWS Foundations Benchmark control ID, e.g. 2.1.5"
+  nist_csf: "NIST CSF subcategory ID, e.g. PR.AC-3"
+
+condition:
+  resource_type: "Resource type the rule applies to, e.g. s3_bucket"
+  eval_path: "Dot-path to the field being evaluated, e.g. ingress.cidr"
+
+  # Use exactly one of the following operators:
+  equals: "Exact match"
+  contains: "Substring / membership match"
+  regex: "Regular-expression match"
+  gte: "Numeric greater-than-or-equal"
+  lte: "Numeric less-than-or-equal"
+
+remediation: "Recommended fix for the issue"

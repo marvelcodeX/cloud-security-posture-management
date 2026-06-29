@@ -1,0 +1,14 @@
+rule_id: CIS-AWS-002
+name: Security Group Open Ingress
+severity: High
+
+compliance:
+  cis_aws: "5.2"
+  nist_csf: "PR.AC-5"
+
+condition:
+  resource_type: security_group
+  eval_path: ingress.cidr
+  equals: "0.0.0.0/0"
+
+remediation: Restrict inbound access to trusted IP ranges instead of 0.0.0.0/0.

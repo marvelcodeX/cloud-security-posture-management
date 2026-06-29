@@ -1,0 +1,14 @@
+rule_id: CIS-AWS-003
+name: IAM Policy Wildcard Action
+severity: Critical
+
+compliance:
+  cis_aws: "1.16"
+  nist_csf: "PR.AC-4"
+
+condition:
+  resource_type: iam_policy
+  eval_path: action
+  contains: "*"
+
+remediation: Replace wildcard actions with specific actions following the principle of least privilege.
