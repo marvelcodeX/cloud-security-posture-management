@@ -1,0 +1,10 @@
+{
+  "resources": [
+    {
+      "resource_id": "unencrypted-bucket",
+      "resource_type": "s3_bucket",
+      "public_read": false,
+      "encryption_enabled": false
+    }
+  ]
+}

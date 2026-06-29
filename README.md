@@ -2,7 +2,7 @@
 
 A full-stack cybersecurity platform for analyzing uploaded cloud configurations and emulated live AWS environments. The planned system combines benchmark-mapped rules, ML-based risk prioritization and anomaly detection, compliance reporting, and attack-path visualization.
 
-The repository is currently at **Phase 0: project setup**. It provides the shared local environment and design documentation; CSPM feature development starts in Phase 1.
+The repository has completed **Phase 1: core rule-based detection engine**. It includes the Phase 0 local environment plus a secure JSON/YAML parser, declarative rule engine, starter AWS security rules, fixtures, and pytest coverage.
 
 ## Architecture
 
@@ -25,9 +25,9 @@ See [the schema](docs/schema.md), [the threat model](docs/threat-model.md), and 
 
 - Git
 - Docker Desktop with Docker Compose v2
-- Python 3.11+ and Node.js LTS for later development phases
+- Python 3.11 for backend development and Node.js LTS for later development phases
 
-Docker is the only runtime needed for the Phase 0 smoke tests.
+Docker is the only runtime needed for the Phase 0 smoke tests. Python is needed for the Phase 1 parser and rule-engine tests. Use Python 3.11 for full backend dependency installation; newer unreleased/interpreter-edge versions may not have wheels for all pinned packages.
 
 ## Run the Phase 0 environment
 
@@ -73,6 +73,16 @@ Stop the environment without deleting its named volumes:
 ```bash
 docker compose down
 ```
+
+## Run the Phase 1 tests
+
+```bash
+python3.11 -m venv .venv
+.venv/bin/python -m pip install -r backend/requirements-dev.txt
+./scripts/run_tests.sh
+```
+
+The test suite validates the secure parser, all five starter rules, good/bad fixtures, and parser safety edge cases.
 
 ## Repository structure
 
