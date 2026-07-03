@@ -1,0 +1,14 @@
+rule_id: CIS-AWS-001
+name: S3 Bucket Public Read Access
+severity: High
+
+compliance:
+  cis_aws: "2.1.5"
+  nist_csf: "PR.AC-3"
+
+condition:
+  resource_type: s3_bucket
+  eval_path: public_read
+  equals: true
+
+remediation: Disable public read access and enable S3 Block Public Access on the bucket.

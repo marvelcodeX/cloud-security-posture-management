@@ -1,0 +1,5 @@
+resources:
+  - resource_id: good-sg
+    resource_type: security_group
+    ingress:
+      cidr: 10.0.0.0/16

@@ -1,0 +1,10 @@
+{
+  "resources": [
+    {
+      "resource_id": "good-policy",
+      "resource_type": "iam_policy",
+      "action": "s3:GetObject",
+      "principal": "arn:aws:iam::123456789012:root"
+    }
+  ]
+}

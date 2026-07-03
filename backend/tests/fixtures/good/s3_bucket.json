@@ -1,0 +1,10 @@
+{
+  "resources": [
+    {
+      "resource_id": "good-bucket",
+      "resource_type": "s3_bucket",
+      "public_read": false,
+      "encryption_enabled": true
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "resources": [
+    {
+      "resource_id": "admin-policy",
+      "resource_type": "iam_policy",
+      "action": "s3:*",
+      "principal": "arn:aws:iam::123456789012:root"
+    }
+  ]
+}
