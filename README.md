@@ -2,7 +2,7 @@
 
 A full-stack cybersecurity platform for analyzing uploaded cloud configurations and emulated live AWS environments. The planned system combines benchmark-mapped rules, ML-based risk prioritization and anomaly detection, compliance reporting, and attack-path visualization.
 
-The repository has completed **Phase 1: core rule-based detection engine**. It includes the Phase 0 local environment plus a secure JSON/YAML parser, declarative rule engine, starter AWS security rules, fixtures, and pytest coverage.
+The repository has completed **Phase 2: backend API and database foundation**. It includes the Phase 0 local environment, the Phase 1 secure parser/rule engine, and Phase 2 FastAPI scan endpoints with SQLModel models and Alembic migrations.
 
 ## Architecture
 
@@ -27,9 +27,9 @@ See [the schema](docs/schema.md), [the threat model](docs/threat-model.md), and 
 - Docker Desktop with Docker Compose v2
 - Python 3.11 for backend development and Node.js LTS for later development phases
 
-Docker is the only runtime needed for the Phase 0 smoke tests. Python is needed for the Phase 1 parser and rule-engine tests. Use Python 3.11 for full backend dependency installation; newer unreleased/interpreter-edge versions may not have wheels for all pinned packages.
+Docker is the easiest runtime for the full backend stack because it starts PostgreSQL, LocalStack, runs database migrations, and serves FastAPI. Python is needed for local backend tests. Use Python 3.11 for full backend dependency installation; newer unreleased/interpreter-edge versions may not have wheels for all pinned packages.
 
-## Run the Phase 0 environment
+## Run the backend stack
 
 ```bash
 git clone <repository-url>
@@ -59,7 +59,7 @@ docker compose exec postgres pg_isready -U postgres -d cspm
 docker compose run --rm backend python /scripts/test_s3.py
 ```
 
-The smoke test creates `cspm-phase-zero-smoke-test` in LocalStack and confirms it can be listed. Local services are exposed at:
+The backend container runs `alembic upgrade head` before starting FastAPI, so the database tables and seeded compliance map are created automatically. The LocalStack smoke test creates `cspm-phase-zero-smoke-test` and confirms it can be listed. Local services are exposed at:
 
 | Service | Address |
 | --- | --- |
@@ -74,7 +74,7 @@ Stop the environment without deleting its named volumes:
 docker compose down
 ```
 
-## Run the Phase 1 tests
+## Run backend tests
 
 ```bash
 python3.11 -m venv .venv
@@ -82,7 +82,15 @@ python3.11 -m venv .venv
 ./scripts/run_tests.sh
 ```
 
-The test suite validates the secure parser, all five starter rules, good/bad fixtures, and parser safety edge cases.
+The test suite validates the secure parser, all five starter rules, API upload/read endpoints, database persistence, and user-scoped access checks.
+
+To verify migrations without Docker:
+
+```bash
+cd backend
+DATABASE_URL=sqlite:///./local_migrations.db alembic upgrade head
+rm local_migrations.db
+```
 
 ## Repository structure
 

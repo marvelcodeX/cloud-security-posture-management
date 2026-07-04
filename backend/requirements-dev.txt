@@ -1,3 +1,5 @@
-# Development / test dependencies for Phase 1.
+# Development / test dependencies for backend phases.
 -r requirements.txt
 pytest==8.3.4
+httpx==0.28.1
+python-multipart==0.0.32

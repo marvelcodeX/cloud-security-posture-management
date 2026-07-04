@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Local Phase 1 test runner — mirrors the CI job.
+# Local backend test runner. Runs Phase 1 rule tests and Phase 2 API tests.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."

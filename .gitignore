@@ -211,6 +211,8 @@ tempCodeRunnerFile.py
 
 # Project-specific generated and secret files
 .DS_Store
+*.db
+*.db-journal
 .idea/
 node_modules/
 *.joblib

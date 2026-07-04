@@ -3,3 +3,6 @@ uvicorn[standard]==0.34.3
 psycopg2-binary==2.9.10
 boto3==1.38.46
 PyYAML==6.0.2
+sqlmodel==0.0.39
+alembic==1.18.5
+python-dotenv==1.2.2

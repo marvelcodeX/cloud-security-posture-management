@@ -56,12 +56,21 @@ class SecureParser:
 
         logger.info("Parsing %s", file.name)
 
-        with ThreadPoolExecutor(max_workers=1) as executor:
+        # A plain ``with ThreadPoolExecutor`` would call ``shutdown(wait=True)``
+        # on exit and block on a runaway worker (Python threads cannot be
+        # force-killed), defeating the timeout. Shut down without waiting so the
+        # caller is never blocked; the size and depth limits are the primary
+        # DoS defences and bound how long a leaked worker can run.
+        executor = ThreadPoolExecutor(max_workers=1)
+        try:
             future = executor.submit(self._parse_content, raw_text, extension)
             try:
                 data = future.result(timeout=PARSE_TIMEOUT)
             except FuturesTimeoutError:
+                future.cancel()
                 raise TimeoutError("Parsing timed out.")
+        finally:
+            executor.shutdown(wait=False, cancel_futures=True)
 
         self._validate_depth(data)
         logger.info("Parsing completed successfully.")
