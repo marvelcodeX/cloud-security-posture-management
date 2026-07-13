@@ -6,3 +6,4 @@ PyYAML==6.0.2
 sqlmodel==0.0.39
 alembic==1.18.5
 python-dotenv==1.2.2
+python-multipart==0.0.32
