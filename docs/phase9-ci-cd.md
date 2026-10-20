@@ -21,7 +21,19 @@ duplicated here.
 | `npm-audit` | `npm audit` | `frontend/`, `--audit-level=high --omit=dev` | Yes |
 | `trivy` | Trivy | the backend image M1's Dockerfile builds | Yes |
 | `semgrep` | Semgrep, `p/ci` ruleset | `backend/src`, `frontend/src` | No (advisory for now) |
-| `codeql` | CodeQL, `python` + `javascript-typescript` | whole repo | No (advisory for now) |
+
+CodeQL is **not** a job in this workflow. This repo already has GitHub's
+**Default Setup** code scanning enabled (visible as a separate `CodeQL` check
+with `Analyze (actions)` / `Analyze (javascript-typescript)` / `Analyze
+(python)`, pre-dating this PR). A custom `codeql-action/init` +
+`codeql-action/analyze` job for the same languages was tried here first and
+failed outright — GitHub refuses to run an "advanced configuration" CodeQL
+workflow alongside Default Setup for languages Default Setup already covers,
+by design, not a misconfiguration to fix. Since Default Setup already scans
+Python and JS/TS (plus GitHub Actions workflows, which this project wasn't
+separately covering), duplicating it here would only re-create the conflict.
+Treat `Analyze (actions)` / `Analyze (javascript-typescript)` / `Analyze
+(python)` as this project's advisory CodeQL checks going forward.
 
 ### Why pip-audit only scans `requirements.txt`, not `requirements-dev.txt`
 
@@ -52,10 +64,10 @@ build` and `npm run test` before merging — not suppressed.
 
 Both are the two scanners most prone to noisy first-run false positives on an
 existing codebase. They run on every PR and push, and genuine findings show
-up in the GitHub Security tab (CodeQL) or the job log (Semgrep), but a red
-result here does **not** block a merge yet. Once a baseline pass is clean
-(see the triage log below), add their check names to branch protection and
-they become required the same as the other four.
+up in the GitHub Security tab (CodeQL, via Default Setup) or the job log
+(Semgrep), but a red result here does **not** block a merge yet. Once a
+baseline pass is clean (see the triage log below), add their check names to
+branch protection and they become required the same as the other four.
 
 ### Trivy and the image build (Shared Contract 1)
 
@@ -85,8 +97,9 @@ Branch protection on `main` requires:
 - `npm audit (frontend dependencies)`
 - `Trivy (backend image scan)`
 
-`Semgrep (advisory)` and the two `CodeQL (...)  (advisory)` checks are
-intentionally **not** in this list yet — see above.
+`Semgrep (advisory)` and Default Setup's `Analyze (actions)` / `Analyze
+(javascript-typescript)` / `Analyze (python)` checks are intentionally **not**
+in this list yet — see above.
 
 This is a GitHub repository-settings change (Settings → Branches → branch
 protection rule for `main`), not a workflow file. A scanner workflow nobody's
@@ -128,8 +141,9 @@ See `.trivyignore` for the exact suppressed IDs.
 
 ## 6. Verification checklist
 
-- [ ] Bandit, pip-audit, npm audit, CodeQL, Trivy all run in CI and produce a
-      real result, not just "step completed."
+- [ ] Bandit, pip-audit, npm audit, Trivy all run in CI and produce a real
+      result, not just "step completed." CodeQL runs via GitHub's Default
+      Setup, already enabled separately from this workflow.
 - [ ] A deliberately-introduced vulnerable dependency/pattern was caught at
       least once during setup, proving the gate actually gates.
 - [ ] Each scanner's first real run triaged — genuine findings fixed or
