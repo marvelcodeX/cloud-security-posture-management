@@ -12,3 +12,6 @@ pwdlib[argon2]
 pyjwt
 argon2-cffi
 slowapi==0.1.10
+# Pin explicitly: boto3's own resolution has landed on a pre-fix urllib3 in CI
+# (Trivy CVE-2026-97687/97689); 2.8.0 is confirmed compatible with boto3==1.38.46.
+urllib3>=2.8.0
