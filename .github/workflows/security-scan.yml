@@ -1,0 +1,159 @@
+name: Security Scan
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bandit:
+    name: Bandit (Python SAST)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Bandit
+        run: python -m pip install --upgrade pip bandit
+
+      - name: Run Bandit
+        run: >
+          bandit -r backend/src -x "*/tests/*"
+          --severity-level medium --confidence-level medium
+
+  pip-audit:
+    name: pip-audit (production dependencies)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install pip-audit
+        run: python -m pip install --upgrade pip pip-audit
+
+      # Known, tracked finding: fastapi==0.115.14 pulls starlette 0.46.2,
+      # which carries CVEs PYSEC-2026-1941/1942/161/2280/2281/248/249. Fixing
+      # requires a starlette 0.46->1.x major bump (via a large fastapi bump),
+      # which needs its own regression pass, not a silent CI-config change.
+      # Tracked for a follow-up dependency-upgrade task; remove these
+      # --ignore-vuln flags once that lands.
+      - name: Audit backend/requirements.txt (shipped dependencies only)
+        run: >
+          pip-audit -r backend/requirements.txt
+          --ignore-vuln PYSEC-2026-1941 --ignore-vuln PYSEC-2026-1942
+          --ignore-vuln PYSEC-2026-161 --ignore-vuln PYSEC-2026-2280
+          --ignore-vuln PYSEC-2026-2281 --ignore-vuln PYSEC-2026-248
+          --ignore-vuln PYSEC-2026-249
+
+  npm-audit:
+    name: npm audit (frontend dependencies)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm install
+
+      # Production dependencies only, same principle as pip-audit above: a
+      # vulnerable dev-only tool (test runner, build tool) never ships and
+      # never reaches an attacker.
+      - name: Audit (high and critical only)
+        run: npm audit --audit-level=high --omit=dev
+
+  semgrep:
+    name: Semgrep (advisory)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Semgrep
+        run: python -m pip install --upgrade pip semgrep
+
+      - name: Run Semgrep community CI ruleset
+        run: semgrep scan --config p/ci --error backend/src frontend/src
+
+  codeql:
+    name: CodeQL (${{ matrix.language }}) (advisory)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [python, javascript-typescript]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
+
+  trivy:
+    name: Trivy (backend image scan)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      # Contract 1: exact command + tag M1 publishes in
+      # backend/docs/phase9-containerization.md section 2. No registry push —
+      # CI builds the same image fresh, scans it, and discards it.
+      - name: Build backend image
+        run: docker build -t cspm-backend:phase9 ./backend
+
+      # .trivyignore at the repo root suppresses two tracked categories:
+      # pip/setuptools-vendored build tooling never invoked at runtime, and
+      # the same already-tracked starlette CVEs pip-audit suppresses above.
+      # See docs/phase9-ci-cd.md section 4.
+      - name: Scan image with Trivy
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: cspm-backend:phase9
+          severity: CRITICAL,HIGH
+          exit-code: "1"
+          ignore-unfixed: true
+          trivyignores: .trivyignore
