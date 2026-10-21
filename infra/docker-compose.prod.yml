@@ -24,13 +24,17 @@ services:
   backend:
     build:
       context: ../backend
+    # Production secrets (DATABASE_URL, JWT_SECRET, ADMIN_EMAIL,
+    # CORS_ALLOW_ORIGINS) come from this file on the deployment host, never
+    # committed and never passed as ${VAR} compose substitution -- Compose
+    # silently substitutes an empty string for an unset shell var, which
+    # breaks these at container startup instead of failing where it's
+    # obvious. See .env.production.example for the required shape.
+    env_file:
+      - ../.env.production
     environment:
-      DATABASE_URL: ${DATABASE_URL}
-      JWT_SECRET: ${JWT_SECRET}
       CSPM_ENV: production
       SECURE_COOKIES: "true"
-      ADMIN_EMAIL: ${ADMIN_EMAIL}
-      CORS_ALLOW_ORIGINS: ${CORS_ALLOW_ORIGINS}
       LOCALSTACK_ENDPOINT: http://localstack:4566
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-test}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-test}
