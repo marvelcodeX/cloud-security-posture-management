@@ -1,0 +1,28 @@
+# Packaging-tool noise, confirmed by locating each path inside the built
+# backend image (see docs/phase9-ci-cd.md section 4): these dist-info
+# METADATA entries live under setuptools/_vendor or pip/_vendor in the base
+# image's bundled pip/setuptools/wheel. pip and setuptools are never invoked
+# by the running app (CMD is `alembic upgrade head && uvicorn ...`), so these
+# are unreachable at runtime, not a real finding against the app.
+CVE-2026-23949
+GHSA-6v7p-g79w-8964
+CVE-2025-47273
+CVE-2026-24049
+# urllib3 2.7.0 here is pip's own vendored copy (pip/_vendor/urllib3) and
+# botocore's legacy compat shim (botocore/vendored/requests/packages/
+# urllib3), neither reachable at runtime. The real, top-level, importable
+# urllib3 the app and botocore actually use is pinned >=2.8.0 in
+# backend/requirements.txt (verified via `pip show urllib3` in the built
+# image) and is NOT what these two IDs are flagging.
+CVE-2026-97687
+CVE-2026-97689
+
+# Tracked, not ignored: starlette 0.46.2, transitive via fastapi==0.115.14.
+# Same suppressed finding as pip-audit's PYSEC-2026-1941/1942/161/2280/2281/
+# 248/249 (see docs/phase9-ci-cd.md section 4) -- fixing requires a starlette
+# 0.46->1.x major bump via a ~35-minor-version fastapi bump, which needs its
+# own regression pass, not a silent CI-config suppression growing stale.
+# Remove once that upgrade lands.
+CVE-2025-62727
+CVE-2026-48818
+CVE-2026-54283
