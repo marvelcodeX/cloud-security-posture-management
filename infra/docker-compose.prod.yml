@@ -1,14 +1,13 @@
-
-name: cspm-production
+name: cspm-prod
 
 services:
   localstack:
     image: localstack/localstack:4.4
     environment:
       SERVICES: s3,ec2,iam
-      AWS_ACCESS_KEY_ID: test
-      AWS_SECRET_ACCESS_KEY: test
-      AWS_DEFAULT_REGION: us-east-1
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-us-east-1}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-test}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-test}
     volumes:
       - localstack_data:/var/lib/localstack
     healthcheck:
@@ -17,28 +16,29 @@ services:
           "CMD-SHELL",
           "curl -fsS http://localhost:4566/_localstack/health >/dev/null",
         ]
-      interval: 10s
+      interval: 5s
       timeout: 5s
       retries: 20
-      start_period: 20s
     restart: unless-stopped
 
   backend:
     build:
       context: ../backend
-      dockerfile: Dockerfile
-    env_file:
-      - ../.env.production
     environment:
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
       CSPM_ENV: production
       SECURE_COOKIES: "true"
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      CORS_ALLOW_ORIGINS: ${CORS_ALLOW_ORIGINS}
       LOCALSTACK_ENDPOINT: http://localstack:4566
-      AWS_ACCESS_KEY_ID: test
-      AWS_SECRET_ACCESS_KEY: test
-      AWS_DEFAULT_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-test}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-test}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-us-east-1}
     ports:
       - "8000:8000"
     volumes:
+      - ../scripts:/scripts:ro
       - ../rules:/rules:ro
     depends_on:
       localstack:
@@ -49,12 +49,11 @@ services:
           "CMD",
           "python",
           "-c",
-          "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=3)",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=2)",
         ]
-      interval: 15s
+      interval: 5s
       timeout: 5s
-      retries: 5
-      start_period: 60s
+      retries: 10
     restart: unless-stopped
 
 volumes:
